@@ -1,0 +1,15 @@
+!!! NEST !!!.- Es un framework orientado al backend, esta trabajado con node son para app con node y está casi hecho con ts, no nos obliga a trabajar con TS pero a día de hoy TS tiene que estar presente en todas nuestras app. Nest por debajo o por defecto usa express que es un framework de node.
+Con nest no nos preocupamos de como van a ser las carpetas, MVC o algun tipo de software, ellos nos proponen una a base de modulos, los cuales tendrán sus controladores, sus proovedores(servicios etc), ellos tienen todo implementarlo. 
+
+Con su CLI, nosotros todo tenemos a mano, tenemos comandos para crear controladores, servicios, providers etc todo lo tiene en su CLI.
+
+Instalación:
+- npm i -g @nestjs/cli => este comando de aquí instala el cli de nestjs para poder usar la línea de comandos
+- nest new . => con esto creamos una app de nest desde 0.
+
+Al crear el proyecto con nest, nos crea un boilerplate de carpetas, en src es donde nosotros vamos a trabajar, tenemos 4 archivos principales :
+
+    - app.controller.ts
+    - app.module.ts
+    - app.service.ts
+    - main.ts => este es el inicializa nuestra app, aquí tenemos server creado, aquí pesca toda la config y nos levanta el servidor.
