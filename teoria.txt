@@ -13,3 +13,4 @@ Al crear el proyecto con nest, nos crea un boilerplate de carpetas, en src es do
     - app.module.ts
     - app.service.ts
     - main.ts => este es el inicializa nuestra app, aquí tenemos server creado, aquí pesca toda la config y nos levanta el servidor.
+    
