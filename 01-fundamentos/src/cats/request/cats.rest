@@ -1,0 +1,12 @@
+### ruta get all
+GET http://localhost:8080/cats
+
+### create
+POST http://localhost:8080/cats
+Content-Type: application/json
+
+{
+    "name": "Cat 3",
+    "age": 3,
+    "breed": "Breed 3"
+}

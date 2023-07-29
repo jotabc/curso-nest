@@ -9,8 +9,173 @@ Instalación:
 
 Al crear el proyecto con nest, nos crea un boilerplate de carpetas, en src es donde nosotros vamos a trabajar, tenemos 4 archivos principales :
 
-    - app.controller.ts
-    - app.module.ts
-    - app.service.ts
+    - app.controller.ts => donde tenemos nuestra clase principal o controlador principal donde lleva toda la lógica, ejecuta todas las funciones que le pasemos.
+
+    - app.module.ts => 
+
+    - app.service.ts => aqui van las funciones que nosotros creamos para que cuando llamemos en nuestro controlador ejecute este servicio. puedes ser una petición, o metodos como finAll, findBy etc etc.
+
     - main.ts => este es el inicializa nuestra app, aquí tenemos server creado, aquí pesca toda la config y nos levanta el servidor.
     
+Nest por defecto usa la plataforma de express.
+Segun la doc de nest podemos usar el empaquetador swc, para que el desarrollo sea mas rápido, podemos colocar en un script de node el sig comando:
+
+    - "start:dev": "nest start --watch -- -b swc", agregando el -b swc usaremos el empaquetador swc.
+
+!CONTROLLER!.- Son los encargados de procesas las solicitudes entrantes y devolver las respuestas al cliente, muchas de las veces procesa yendo al DB.
+El mecanismo de enruramiento controla qué controlador recibe que solicitudes. Con frecuencia cada controlador tiene más de una ruta y diferentes rutas puedes realizar diff acciones.
+Para crear un controlador básico, debemos de usar clases y decoradores. Los decoradores asocian las clases con los metadatos requeridos y permiten que nest cree un mapa de enrutamiento( vincule las solicitudes a los controladores correspondientes).
+Podemos crear un controlador con un CRUD con la validación incorporada, podemos generar con el CLI, 
+nest g resource [name].
+
+En nest podemos crear nosotros mismo custom decoradores, los decoradores nos ayudan para decorar, osea, nos yuda a usar o inyectar dependencias o sirve también como extender la funcionalidad de una clase, ojo los decoradores son propios de typescript por ejm
+
+// en php
+class Some extends SomeController
+
+// nest con decoradores
+@Controller() //witout route
+@Controller('cats') // with route cuando recibe una ruta, las subs rutas llevarén ese preffijo antes, osea en el controlador podemos nosotros cargar todas nuestras rutas que deseemos, cuando el decorador del contorller que extiende lleva una ruta todas las rutas hijas llevaran ese prefijo.
+export class Some {
+    ...rest of code
+    @Get('name_route')
+    function_to_execute => Para acceder a esta ruta sería dominio/cats/name_route
+
+    => si el controller no lleva la ruta dentro se accede desde la raíz dominio/name_route
+
+}
+
+Usamos lo decoradores pata los tipos de peticiones, y el tipo de petición puede llevar dentro el nombre de la ruta ejm 
+
+@SomeController()
+export class Some {
+    @Get('name_route')
+    function_to_execute
+
+}
+
+Una cosa que nos facilita nest es que nosotros en express tenemos que parsear las respuestas del body en json colocando el middleware app.user(express.json()) aunque es una linea, con nest nosotros en las creaciones de las rutas debemos nosotros de retornar el tipo de campo en este caso object 
+
+@Get()
+  findAll(): object {
+    return {
+      message: 'this is a json',
+    };
+  }
+  Automaticamente hace el parseo del json e igual no colocamos los content-type, e incluso el modifica los status code dependiendo de como vaya la peticion.
+
+  Podemos nosotros usar o recibir en las funciones como en express la req, debemos importarlo con un decorador dentro de la función que queremos que tenga la req y la res, la request y la response viene de express
+  import { Request, Response } from 'express'
+
+  @Post()
+  create(
+    @Req() req: Request
+    @Res() res: Response
+
+   ): object {
+    console.log(req.body);
+
+    return req.body;
+  }
+
+Pero también nos facilita un poco de cosas nest con esto por que tenemos diff decoradores que don directos ya como por jem @Body(): que equivale al req.body y asi a continucacion una lista:
+
+DECORADOR       =======>     EQUIVALENTE
+@Request(), @Req()	        req
+@Response(), @Res()*	    res
+@Next()	                    next
+@Session()	                req.session
+@Param(key?: string)	    req.params / req.params[key]
+@Body(key?: string)	        req.body / req.body[key]
+@Query(key?: string)	    req.query / req.query[key]
+@Headers(name?: string)	    req.headers / req.headers[name]
+@Ip()	                    req.ip
+@HostParam()	            req.hosts
+
+
+ejms
+// BODY => DTO es la interfaz de typeScript que puede llevar el body por ejm name: string, age: number etc
+el DTO es un objeto de trasmferecia de dato sería como una interfaz, o como una clase ejm
+Con esto podemos validar nosotros los datos que llegan al backend, define los como se enviarán los datos através de la red Ojo este eschema es cuando usanmos TS. Mas recomendado usar class, porque las clases son parte del standard ES6, porque, porque el código de TS se compilará a JS y quedará como almacenado como una clase en JS, en cambio con las interfaces de TS, al copilar a JS interface en JS no , entonces dutante la transpilacion nest no pueden consultarlas en tiempo de ejecución y las eliminará. 
+
+export class CreateCatDto {
+    name: string,
+    age: number
+}
+
+export interface CreateCatDto {
+    name: string,
+    age: number
+}
+
+@Post()
+  create(@Body() body: CreateCatDto): object {
+    console.log(body);
+    return body;
+  }
+
+// podemos personalizar los statusCode.
+@Post()
+@HttpCode(404)
+  create(@Body() body: Interface): object {
+    console.log(body);
+    return body;
+  }
+
+Cuando nosotros trabajamos como nest, osea mediante carpetas y dentro nuestra lógica, nest no sabe que existen nuestros controladores porque esta totlamente separado en un carpeta, es decir, creamos una carpeta llamada cats aqui dentro iran servicios, dto, controladores y modulos de toda está lógica que sería cats, para hacer saber a nest que es un controlador debemos nosotros de module.
+Las carpetas a trabajar se crean dentro de src. src/cats
+
+Un controlador siempre esta asociado a un modulo siempre, en los modulos es donde se registran los controladores.
+
+! PROVEEDORES!.- La idea princpla de un proveedor es que se puede inyectar como una dependencia, esto significa que los objetos pueden crear diversas relaciones entre sí, y la función "conectar" instancias de objetos pueden delegarse en gran medida al sistema de tiempo de ejecución de Nest.
+Osea las logicas de devolucio osea, los return de las funciones no deben de llevar esa lógica los controladores si no separados.
+
+! SERVICIOS !.- El responsable del almacenamiento y recuperación de datos, un buen candidato a ser un porveedor. Aqui van las funciones donde nosotros por ejm ripo finAll, findBy etc etc.
+
+Los servicios tambien debemos de registrarlo en los modulos ejm:
+
+import { Module } from '@nestjs/common';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { CatsController } from './cats/cats.controller';
+import { CatsService } from './cats/cats.service';
+
+@Module({
+  imports: [],
+  controllers: [AppController, CatsController], // registro del CatsController
+  providers: [AppService, CatsService], // registro del CatsServices
+})
+export class AppModule {}
+
+
+! MODULO !.- Cada app tiene alménos un modulo raíz, el modulo raíz es el punto de partida que utliza nest para crear el gŕafico de la app. Si la app es muy pequeña se puede usar un modulo raíz, casi nunca es recomendable tener un modula si no por cada carpeta crear un modulo, luego este se encapsulara.
+OSea en este caso el modulo cat que estamos trabajando lo estamos registrando en el app.module.ts de la raíz, según recomendaciones de nest debemos de crear un modulo dentro de cats y ahí registrarlo, Un modulo puede llevar:
+  - providers (services)
+  - controllers
+  - imports
+  - exports
+Un modulo de funciones simplemente organiza el código relevante para una función específica, manteniendo el código organzado y estableciendo límites claros. Esto nos ayuda a gestionar la complejidad y desarrollar con principios SOLID, especialmente a medida que crece el tamaño de la app y/o equipo.
+
+cats/cats.module.ts
+import { Module } from '@nestjs/common';
+import { CatsController } from './cats.controller';
+import { CatsService } from './cats.service';
+
+@Module({
+  imports: [],
+  exports: [CatsService], => podemos usar este para poder compartir este catsServices, osea para comunicaciones entre varios modulos de nuestra app.
+
+  controllers: [CatsController],
+  providers: [CatsService],
+})
+export class CatsModule {}
+
+Luego en nuestro modulo principal app.module.ts debemos de importar ese modulo
+@Module({
+  imports: [CatsModule], => importacion del modulo de acts asi tendremos acceso a todo eso.
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
+
+Si no queremos usar la comunicaicon de modulos, entre si podemos usar modulos globales @Global().

@@ -1,0 +1,54 @@
+import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { CreateCatDto } from './dtos/create-cat.dto';
+
+// each child route will start with cats
+@Controller('cats')
+export class CatController {
+  // constructor(private readonly catService: CatService) {}
+
+  @Get()
+  findAll(): object {
+    return {
+      message: 'this is a json',
+    };
+  }
+
+  /* @Get('hello')
+  getHello(): string {
+    return this.catService.getHello();
+  } */
+
+  // rutas con id
+  @Get(':id/:name')
+  findOne(@Param() params: any): object {
+    return {
+      id: params.id,
+      name: params.name,
+      age: 2,
+    };
+  }
+
+  // rutas con id pero destructurado
+  @Get(':id')
+  findOneBY(@Param('id') id: string): object {
+    return {
+      id: id,
+      name: 'Cat destructuring',
+      age: 2,
+    };
+  }
+
+  // simple
+  /* @Post()
+  create(@Body() body: CreateCatDto): object {
+    console.log(body);
+    return body;
+  } */
+
+  @Post()
+  create(@Body() createCatDto: CreateCatDto): object {
+    return {
+      dto: createCatDto,
+    };
+  }
+}
