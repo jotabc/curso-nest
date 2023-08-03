@@ -1,0 +1,28 @@
+### ruta get all
+GET http://localhost:8080/dogs
+
+### ruta get by id
+GET http://localhost:8080/dogs/1
+
+### create
+POST http://localhost:8080/dogs
+Content-Type: application/json
+
+{
+    "name": "Dog 1",
+    "age": "1",
+    "breed": "Breed 1"
+}
+
+### patch
+PATCH http://localhost:8080/dogs
+Content-Type: application/json
+
+{
+    "name": "Dog 2 update",
+    "breed": "Breed 2 update"
+}
+
+
+### remove
+DELETE http://localhost:8080/dogs

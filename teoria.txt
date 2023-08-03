@@ -179,3 +179,121 @@ Luego en nuestro modulo principal app.module.ts debemos de importar ese modulo
 export class AppModule {}
 
 Si no queremos usar la comunicaicon de modulos, entre si podemos usar modulos globales @Global().
+
+! DIIF ENTRE DTO E Interface!.-
+  - La interfaz es lo que va a representar lo que va a estar en la DB, es el objeto a guradarse en la DB, osea el nombre es tipo string, edad number etc etc.
+
+  - Con un DTO podemos tener datos por defectos en la DB que no van ha ser lo mismo que le vamos a estar solicitando al cliente, osea, cuando creamos un recurso no le vamos a estar pidiendo un id a un cliente, o x ejm si no queremos eliminar fisicamente un elemento si no através de un estado true de forma lógica.
+  Un DTO es la información que un cliente nos va a enviar, que posteriormente vamos a validar, con lo que no permitiremos enviar datos hasta que no cumpla la validación.
+
+!Pipes!.- (Tubería) un pipe es una clase anotada con el @Injectable decorador, que implementa la PipeTransform interfaz. Tiene dos casos de uso típicos:
+
+  - transformación.- Tranforma los datos de entrada a la forma deseada (x ejm, de cadena a entero).
+  - validación.- evalúe los datos de entrada y, si son válidos, simplemente páselos sin cambios, de lo contrario, lanzar una excepción.
+  Los pipes son pequelas validaciones que podemos colocar en la request. Los pipes lanzan excepciones si el dato no es el mismo tipo antes que se llame al controlador de la ruta.
+
+  // EJM
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: string) {
+    return this.catsService.findOne(+id);
+  }
+  Aquí esperamos que el id que nos envien en la request siempre sea un número, es decir, api/1 válido, api/sss inválido, le obligamos a que nos mande siempre un número.
+  La excepción evitará que el método findOne en este caso se ejecute en el cuerpo del método.
+  Tiene también un método útil cuando nosotros queremos que sea un uuid por ejm de versión 4 y tiene que ser igual a la que le mandamos. Podemos crear también nosotros nuestros customPipes.
+
+!Validaciones!.- Para las validaciones nostros podemos con cualuquier paquete en este caso con class validator que es un paquete externo. pnpm add class-validator class-transformer -SE
+  - el class-tranformer nos servirá para trasnformar la data.
+
+Para que nos sirve esto nos sirve por ejm para que cuando me crea un recurso en este caso un un gato, no pueda enviar vacío, el nombre etc etc que nos este vacío, osea, estamos validando los datos que nos envia el cliente.
+
+1) Para nosotros tener una validación automática en nest, debemos de configurar en nuestro main o punto de entrada de mi app agregando la sig línea:
+
+  //main.ts
+  import { NestFactory } from '@nestjs/core';
+  import { AppModule } from './app.module';
+ 
+  import { ValidationPipe } from '@nestjs/common';
+
+  async function bootstrap() {
+    const app = await NestFactory.create(AppModule);
+    app.useGlobalPipes(new ValidationPipe()) // línea agregada.
+    await app.listen(process.env.PORT || 8080);
+  }
+
+  bootstrap();
+
+2) Luego podemos agregar algunas reglas de validación en nuestros DTOs, usando decoradores porvisto por class-validator, de esta manera cualquier ruta que use ese DTO automaticamente aplicará estas reglas de validación.
+
+// ejm
+  import { IsInt, IsOptional, IsPositive, IsString } from 'class-validator';
+
+  export class CreateCatDto {
+    @IsString() // ejm de validaciones con decoradores de class-validator.
+    name: string;
+
+    @IsInt()
+    @IsPositive()
+    age: number;
+
+    @IsString()
+    @IsOptional()
+    breed?: string;
+  }
+
+3) Podemos usar un validator que nos permite que cuando nosotros por ejm, tenemos un tipo string que necesita enviarse del cliente y el usuario nos manda un number, pordemos transforma la data automaticamente, por ejm si nos manda un age: "5" esperamos un número, al enviar al salvar este transform:
+  1) Debemos de agregar la prop trasnform a true en nuestro main dentro del Validador global ejm
+    // podemos tambien evitar que envien campos que no exista en nuestros schemas con whiteList: true
+    // podemos lanzar un error si queremos de lo mismo.
+  main.ts
+  app.useGlobalPipes(
+    new ValidationPipe({
+      // esto hace que no puedan enviar un campo que no exista en nuestro DB, automaticamente lo elimina.
+      whitelist: true,
+      // este forbidNonWhitelisted si queremos activarla, lo que hace es tirar un error de la propiedad que no existe en el schema.
+      forbidNonWhitelisted: true,
+      transform: true, // nos sirve para trasnforma la data automaticamente.
+    }),
+  );
+
+  2) Debemos en nustros dto, user el decorador Type de class-validator en ese caso y dentro pasarle una fn con el tipo de dato al que queremos que se transforme ejm
+
+  export class CreateCatDto {
+    @IsString()
+    name: string;
+
+    @IsInt()
+    @IsPositive()
+    @Type(() => Number)
+    age: number;
+  }
+
+RESUMEN COMO TRABAJA NEST? .- Nest tiene una forma de trabjar explicita: dentro de src.
+  1) Creacion de un carpeta donde este dentro la lógica de negicio, por ejm, estamos haciendo una app de productos, podemos crear una carpeta products, también users, etc etc dependiendo por decirlo de una forma los módulos principales de nuestra app, la lógica de negocio.
+
+  2) Dentro de las carpetas debemos de crear toda esa lógica que llevara dichos modulos, dentro podemos generar DTO, interfaces, controller, modulos y servicios con son las 2 principales cosas de nuestra app.
+
+  3) Como hacer buenas pŕacticas:
+    - Separar la lógica de los controladores, los controllers con solo los encargados de ejecutar o llamar a esas funciones. name_folder.controllers.ts
+
+    - En los servicios creamos las funciones con toda la lógica dentro la cual nosotros, podemos crear findAll, findOne, métodos que leugo podrán ser llamados de nuestro cliente.
+    name_folder.service.ts
+
+    - Modulos cada carpeta lleva que es donde nosotros registramos nuestros controladores, para su posterior uso si ni nest no puedo usarlo.
+    name_folder.module.ts
+
+  4) Debemos de registras ese modulo que nosotros creamos, si tenemos una carpeta products, dentro tendrá si o si un archivo module donde registramos nuestros constroladores y métodos que vamos a usar, debemos registar en el app.module.ts file que esta en src/app.module.ts, este es el modulo principal de nuestra app donde se registran cada modulo para su posterior uso, si no nest no lo puede usar.
+
+  src/app.modules.ts
+  import { Module } from '@nestjs/common';
+  import { ProductsModule } from './products/products.module';
+
+  @Module({
+    imports: [ProductsModule], // importación de módulo products.
+    controllers: [],
+    providers: [],
+  })
+export class AppModule {}
+
+!NEST CLI!.- Nos permite a nosotros crear service, controllers, modules, podemos usar el cli de nest cuando lo instalamos de forma global ejm:
+    - nest => lanzando este comando nosotros podemos verificar los comandos(CLI) que tiene nest.
+    - nest g resource dogs o nest g res dogs => con este comandito nostros podemos generar un CRUD completo, dogs es el nombre del modulo que queremos crear puede ser dogs, products, etc etc.
